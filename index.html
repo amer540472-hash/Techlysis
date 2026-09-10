@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Techlysis — full technical & fundamental analysis with chart overlays. Pure HTML/CSS/JS." />
+  <title>Techlysis — Multi-Asset Technical Analysis</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <div>
+          <h1>Techlysis</h1>
+          <p class="tagline">OHLCV · TA · SMC · Volume Profile · Fib</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <label class="ctrl">
+          <span>Asset</span>
+          <select id="assetSelect" aria-label="Asset">
+            <option value="XAUUSD">Gold (XAUUSD)</option>
+            <option value="EURUSD">EUR/USD</option>
+            <option value="USOIL">US Oil (WTI)</option>
+            <option value="GBPJPY">GBP/JPY</option>
+            <option value="BTCUSD" selected>BTC/USD</option>
+            <option value="ETHUSD">ETH/USD</option>
+          </select>
+        </label>
+        <label class="ctrl">
+          <span>Timeframe</span>
+          <select id="tfSelect" aria-label="Timeframe">
+            <option value="1m">1m</option>
+            <option value="3m">3m</option>
+            <option value="5m">5m</option>
+            <option value="15m" selected>15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1D</option>
+          </select>
+        </label>
+        <label class="ctrl">
+          <span>Bars</span>
+          <select id="limitSelect" aria-label="Bar count">
+            <option value="100">100</option>
+            <option value="200" selected>200</option>
+            <option value="300">300</option>
+            <option value="500">500</option>
+          </select>
+        </label>
+        <button id="analyzeBtn" class="btn primary" type="button">Analyze</button>
+        <button id="refreshBtn" class="btn ghost" type="button" title="Refresh data">↻</button>
+      </div>
+      <div class="status-bar">
+        <span id="statusDot" class="dot idle"></span>
+        <span id="statusText">Ready</span>
+        <span id="sourceBadge" class="badge">—</span>
+        <span id="lastUpdate" class="muted"></span>
+      </div>
+    </header>
+
+    <!-- Main grid -->
+    <main class="main">
+      <!-- Left: chart + overlays -->
+      <section class="chart-panel">
+        <div class="chart-toolbar">
+          <div class="price-strip">
+            <span id="symbolLabel" class="sym">BTCUSD</span>
+            <span id="lastPrice" class="price">—</span>
+            <span id="priceChange" class="chg">—</span>
+            <span id="ohlcReadout" class="ohlc muted"></span>
+          </div>
+          <div class="toolbar-actions">
+            <button type="button" class="btn tiny" id="fitBtn" title="Fit chart">Fit</button>
+            <button type="button" class="btn tiny" id="resetZoomBtn" title="Reset zoom">1:1</button>
+            <label class="tiny-check"><input type="checkbox" id="crosshairToggle" checked /> Crosshair</label>
+            <label class="tiny-check"><input type="checkbox" id="gridToggle" checked /> Grid</label>
+          </div>
+        </div>
+
+        <div class="chart-wrap" id="chartWrap">
+          <canvas id="mainChart"></canvas>
+          <canvas id="overlayChart"></canvas>
+          <div id="tooltip" class="tooltip hidden"></div>
+          <div id="legend" class="legend"></div>
+        </div>
+
+        <div class="subchart-wrap" id="subchartWrap">
+          <canvas id="volumeChart"></canvas>
+          <canvas id="indicatorChart"></canvas>
+        </div>
+
+        <!-- Overlay toggles -->
+        <div class="overlay-panel">
+          <h3>Chart Overlays</h3>
+          <div class="overlay-grid" id="overlayToggles">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: report -->
+      <aside class="report-panel">
+        <div class="report-tabs" role="tablist">
+          <button class="tab active" data-tab="full" type="button">Full Report</button>
+          <button class="tab" data-tab="ta" type="button">Technical</button>
+          <button class="tab" data-tab="smc" type="button">SMC / Zones</button>
+          <button class="tab" data-tab="vp" type="button">Volume Profile</button>
+          <button class="tab" data-tab="fund" type="button">Fundamental</button>
+          <button class="tab" data-tab="levels" type="button">Key Levels</button>
+        </div>
+        <div class="report-body" id="reportBody">
+          <div class="empty-state">
+            <div class="empty-icon">◈</div>
+            <h2>Select asset & timeframe</h2>
+            <p>Press <strong>Analyze</strong> to fetch latest OHLCV from free sources and generate a full written + charted analysis.</p>
+            <ul class="feature-list">
+              <li>Support / Resistance · Swings · Highs & Lows</li>
+              <li>Supply & Demand zones · FVG · Order Blocks</li>
+              <li>Fixed Range VP · POC · VAH · VAL</li>
+              <li>Fibonacci · EMA/SMA · RSI · MACD · BB</li>
+              <li>Fundamental snapshot per asset</li>
+            </ul>
+          </div>
+        </div>
+        <div class="report-actions">
+          <button type="button" class="btn ghost" id="copyReportBtn">Copy Report</button>
+          <button type="button" class="btn ghost" id="printReportBtn">Print / PDF</button>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>Pure HTML · CSS · JS · GitHub Pages ready</span>
+      <span class="muted">Data: Binance · Yahoo · Stooq · synthetic fallback</span>
+      <span class="muted">Not financial advice. Educational use only.</span>
+    </footer>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/smc.js"></script>
+  <script src="js/volume-profile.js"></script>
+  <script src="js/fibonacci.js"></script>
+  <script src="js/analysis.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
